@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ігрова Галерея</title>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+        }
+
+        /* Навігаційна панель */
+        .container {
+            display: table;
+            width: 100%;
+            padding: 15px 30px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .nav-left { display: table-cell; text-align: left; vertical-align: middle; }
+        .nav-right { display: table-cell; text-align: right; vertical-align: middle; }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 26px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            border-radius: 50px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-right: 10px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(118, 75, 162, 0.3);
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+
+        .btn-right-style {
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            color: #fff;
+            margin-right: 0;
+        }
+        .btn-right-style:hover {
+            box-shadow: 0 7px 14px rgba(253, 160, 133, 0.4);
+            background: linear-gradient(135deg, #fda085 0%, #f6d365 100%);
+            transform: translateY(-2px);
+        }
+
+        .content { padding-top: 85px; }
+        .step-section { min-height: 85vh; padding: 40px 20px; border-bottom: 2px dashed #e2e8f0; }
+
+        .section-title {
+            text-align: center; font-size: 32px; font-weight: 800; margin-bottom: 45px; color: #1a202c;
+            display: flex; align-items: center; justify-content: center; gap: 15px;
+        }
+        .section-title::before, .section-title::after {
+            content: ''; display: inline-block; width: 60px; height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 2px;
+        }
+        .step-section:nth-child(even) .section-title::before, .step-section:nth-child(even) .section-title::after {
+            background: linear-gradient(90deg, #f6d365, #fda085);
+        }
+
+        .placeholder-container {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0; gap: 30px;
+        }
+
+        .placeholder-text {
+            text-align: center; font-size: 32px; color: #c05621; font-weight: 800;
+            display: flex; align-items: center; justify-content: center; gap: 15px;
+        }
+        .placeholder-text::before, .placeholder-text::after {
+            content: ''; display: inline-block; width: 60px; height: 3px;
+            background: linear-gradient(90deg, #f6d365, #fda085); border-radius: 2px;
+        }
+
+        .btn-placeholder {
+            display: inline-block; padding: 18px 64px; font-size: 22px; font-weight: 700; color: white;
+            background: linear-gradient(135deg, #fda085 0%, #f6d365 100%); border: none; border-radius: 16px;
+            cursor: pointer; box-shadow: 0 6px 20px rgba(253, 160, 133, 0.4); transition: all 0.3s ease;
+        }
+        .btn-placeholder:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(253, 160, 133, 0.6); }
+
+        .game-menu { display: none; gap: 15px; justify-content: center; flex-wrap: wrap; }
+
+        .btn-game-choice {
+            padding: 12px 30px; font-size: 16px; font-weight: 600; color: #4a5568;
+            background: white; border: 2px solid #cbd5e0; border-radius: 12px; cursor: pointer; transition: all 0.2s ease;
+        }
+        .btn-game-choice:hover, .btn-game-choice.active {
+            background: #667eea; color: white; border-color: #667eea; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-close-games {
+            display: none; padding: 10px 25px; font-size: 14px; font-weight: 700; color: white;
+            background: #e53e3e; border: none; border-radius: 10px; cursor: pointer; margin-top: 10px;
+        }
+        .btn-close-games:hover { background: #c53030; }
+
+        .games-container { width: 100%; display: flex; justify-content: center; }
+
+        .game-box {
+            display: none; flex-direction: column; align-items: center; background: #ffffff;
+            padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 3px solid #fda085;
+        }
+
+        .score-board-wrapper {
+            display: flex; gap: 15px; margin-bottom: 15px;
+        }
+
+        .score-board {
+            font-size: 18px; font-weight: 800; color: #c05621;
+            background: #feebc8; padding: 6px 18px; border-radius: 30px;
+        }
+        .score-board.best {
+            color: #2b6cb0; background: #ebf8ff;
+        }
+
+        /* Клікер */
+        .clicker-layout { display: flex; gap: 30px; align-items: center; justify-content: center; }
+        .shop-box {
+            background: #f7fafc; border: 2px dashed #cbd5e0; padding: 15px; border-radius: 12px; text-align: center; width: 220px;
+        }
+        .btn-shop {
+            background: #48bb78; color: white; border: none; padding: 8px 12px; font-weight: bold;
+            border-radius: 8px; cursor: pointer; margin-top: 6px; width: 100%; transition: background 0.2s;
+        }
+        .btn-shop:hover { background: #38a169; }
+        .btn-shop:disabled { background: #cbd5e0; cursor: not-allowed; }
+
+        .sushi-clicker { font-size: 90px; cursor: pointer; user-select: none; transition: transform 0.05s ease; }
+        .sushi-clicker:active { transform: scale(0.85); }
+
+        .floating-text {
+            position: absolute; font-size: 24px; font-weight: bold; color: #e53e3e;
+            pointer-events: none; animation: floatUp 0.6s ease-out forwards; z-index: 2000;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translate(-50%, -50%) translateY(0); }
+            100% { opacity: 0; transform: translate(-50%, -50%) translateY(-60px); }
+        }
+
+        /* Канваси */
+        canvas { border-radius: 10px; display: block; outline: none; }
+        #snakeCanvas { background-color: #2e7d32; border: 4px solid #1b5e20; }
+        #dinoCanvas { background-color: #ffffff; border: 2px solid #cbd5e0; }
+
+        .mobile-controls { display: grid; grid-template-columns: repeat(3, 55px); grid-template-rows: repeat(2, 45px); gap: 8px; margin-top: 15px; justify-content: center; }
+        .ctrl-btn { background: #edf2f7; border: 2px solid #cbd5e0; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #2d3748; user-select: none; }
+        .ctrl-btn:active { background: #cbd5e0; }
+        .ctrl-up { grid-column: 2; grid-row: 1; }
+        .ctrl-left { grid-column: 1; grid-row: 2; }
+        .ctrl-down { grid-column: 2; grid-row: 2; }
+        .ctrl-right { grid-column: 3; grid-row: 2; }
+
+        /* Шаблонні стилі */
+        .gallery-layout { display: grid; grid-template-columns: 320px 620px 320px; justify-content: center; gap: 20px; max-width: 1300px; margin: 0 auto; }
+        .gallery-layout-three { display: grid; grid-template-columns: repeat(3, 300px); justify-content: center; gap: 25px; max-width: 1000px; margin: 0 auto; }
+        .gallery-column-side { display: flex; flex-direction: column; align-items: center; }
+        .gallery-column-center { display: flex; flex-direction: column; justify-content: flex-end; height: 100%; }
+        .option-card { display: block; width: 300px; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 25px; overflow: hidden; transition: transform 0.2s ease; border: 2px solid transparent; cursor: pointer; }
+        .option-card input[type="radio"] { display: none; }
+        .option-card input[type="radio"]:checked + .card-content { background-color: #f0f4ff; border: 2px solid #667eea; border-radius: 12px; }
+        .card-content { padding: 0; border: 2px solid transparent; border-radius: 12px; }
+        .image-container-300 { width: 300px; height: 300px; overflow: hidden; background-color: #eaedf2; position: relative; }
+        .option-image-side { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .card-info { padding: 15px; text-align: center; }
+        .card-info h3 { margin: 0 0 10px 0; font-size: 16px; color: #2d3748; font-weight: 600; }
+        .center-banner { width: 600px; background: #ffffff; border-radius: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.06); overflow: hidden; margin: 0 auto 25px auto; }
+        .center-title-area { padding: 25px; text-align: center; background: #ffffff; border-bottom: 1px solid #edf2f7; }
+        .center-title-placeholder { font-size: 22px; font-weight: 700; color: #1a202c; margin: 0; padding: 12px; border: 2px dashed #cbd5e0; border-radius: 8px; background-color: #f7fafc; }
+        .image-container-600 { width: 600px; height: 1500px; overflow: hidden; }
+        .option-image-center { width: 100%; height: 100%; object-fit: cover; display: block; }
+        #step1 { background-color: #f8fafc; }
+        #step2 { background-color: #edf2f7; }
+        #step3 { background-color: #e2e8f0; }
+        #step4 { background-color: #feebc8; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="nav-left">
+            <a href="#step1" class="btn btn-primary">Всі ігри</a>
+            <a href="#step2" class="btn btn-primary">Ігри на телефоні</a>
+            <a href="#step3" class="btn btn-primary">Ігри на ПК</a>
+        </div>
+        <div class="nav-right">
+            <a href="#step4" class="btn btn-primary btn-right-style">Якщо нудно</a>
+        </div>
+    </div>
+
+    <div class="content">
+
+        <div id="step1" class="step-section">
+            <div class="section-title">Всі ігри</div>
+            <form action="" method="POST">
+                <div class="gallery-layout">
+                    <div class="gallery-column-side">
+                        {% for game in Games %}
+                            {% if loop.index % 2 != 0 %}
+                            <label class="option-card">
+                                <input type="radio" name="game" value="{{game.id}}" required>
+                                <div class="card-content">
+                                    <div class="image-container-300"><a href="{{game.link}}"><img src="{{ url_for('static', filename=game.image) }}" class="option-image-side" alt="Гра"></a></div>
+                                    <div class="card-info"><h3>{{game.description}}</h3></div>
+                                </div>
+                            </label>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="gallery-column-center">
+                        <div class="center-banner">
+                            <div class="center-title-area"><div class="center-title-placeholder">Древо ігор</div></div>
+                            <div class="image-container-600"><img src="{{ url_for('static', filename='images/banner.png') }}" class="option-image-center" alt="Древо ігор"></div>
+                        </div>
+                    </div>
+                    <div class="gallery-column-side">
+                        {% for game in Games %}
+                            {% if loop.index % 2 == 0 %}
+                            <label class="option-card">
+                                <input type="radio" name="game" value="{{game.id}}" required>
+                                <div class="card-content">
+                                    <div class="image-container-300"><a href="{{game.link}}"><img src="{{ url_for('static', filename=game.image) }}" class="option-image-side" alt="Гра"></a></div>
+                                    <div class="card-info"><h3>{{game.description}}</h3></div>
+                                </div>
+                            </label>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div id="step2" class="step-section">
+            <div class="section-title">Ігри на телефоні</div>
+             <form action="" method="POST">
+                 <div class="gallery-layout-three">
+                    {% for game in GameMobales %}
+                        <label class="option-card" style="margin-bottom: 0;">
+                            <input type="radio" name="game" value="{{game.id}}" required>
+                            <div class="card-content">
+                                <div class="image-container-300"><a href="{{game.link}}"><img src="{{ url_for('static', filename=game.image) }}" class="option-image-side" alt="Гра"></a></div>
+                                <div class="card-info"><h3>{{game.description}}</h3></div>
+                            </div>
+                        </label>
+                    {% endfor %}
+                </div>
+            </form>
+        </div>
+
+        <div id="step3" class="step-section">
+            <div class="section-title">Ігри на ПК</div>
+            <form action="" method="POST">
+                <div class="gallery-layout">
+                    <div class="gallery-column-side">
+                        {% for game in GamePCs %}
+                            {% if loop.index % 2 != 0 %}
+                            <label class="option-card">
+                                <input type="radio" name="game" value="{{game.id}}" required>
+                                <div class="card-content">
+                                    <div class="image-container-300"><a href="{{game.link}}"><img src="{{ url_for('static', filename=game.image) }}" class="option-image-side" alt="Гра"></a></div>
+                                    <div class="card-info"><h3>{{game.description}}</h3></div>
+                                </div>
+                            </label>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="gallery-column-center">
+                        <div class="center-banner">
+                            <div class="center-title-area"><div class="center-title-placeholder">Древо ігор ПК</div></div>
+                            <div class="image-container-600"><img src="{{ url_for('static', filename='images/banner.png') }}" class="option-image-center" alt="Древо ігор"></div>
+                        </div>
+                    </div>
+                    <div class="gallery-column-side">
+                        {% for game in GamePCs %}
+                            {% if loop.index % 2 == 0 %}
+                            <label class="option-card">
+                                <input type="radio" name="game" value="{{game.id}}" required>
+                                <div class="card-content">
+                                    <div class="image-container-300"><a href="{{game.link}}"><img src="{{ url_for('static', filename=game.image) }}" class="option-image-side" alt="Гра"></a></div>
+                                    <div class="card-info"><h3>{{game.description}}</h3></div>
+                                </div>
+                            </label>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div id="step4" class="step-section">
+            <div class="placeholder-container">
+                <div class="placeholder-text">Якщо нудно</div>
+
+                <button type="button" class="btn-placeholder" id="mainPlayBtn">Грати</button>
+
+                <div class="game-menu" id="gameMenu">
+                    <button type="button" class="btn-game-choice" onclick="switchGame('snake')">Змійка 🐍</button>
+                    <button type="button" class="btn-game-choice" onclick="switchGame('clicker')">Клікер 🍣</button>
+                    <button type="button" class="btn-game-choice" onclick="switchGame('dino')">Динозаврик 🦖</button>
+                </div>
+
+                <div class="games-container">
+
+                    <div class="game-box" id="snakeBox">
+                        <div class="score-board-wrapper">
+                            <div class="score-board">🍎 Рахунок: <span id="snakeScore">0</span></div>
+                            <div class="score-board best">🏆 Рекорд: <span id="snakeBest">0</span></div>
+                        </div>
+                        <canvas id="snakeCanvas" width="300" height="300" tabindex="1"></canvas>
+                        <div style="margin-top: 8px; color:#718096; font-size:12px;"></div>
+                        <div class="mobile-controls">
+                            <button type="button" class="ctrl-btn ctrl-up" onclick="changeSnakeDir('UP')">▲</button>
+                            <button type="button" class="ctrl-btn ctrl-left" onclick="changeSnakeDir('LEFT')">◄</button>
+                            <button type="button" class="ctrl-btn ctrl-down" onclick="changeSnakeDir('DOWN')">▼</button>
+                            <button type="button" class="ctrl-btn ctrl-right" onclick="changeSnakeDir('RIGHT')">►</button>
+                        </div>
+                    </div>
+
+                    <div class="game-box" id="clickerBox">
+                        <div class="clicker-layout">
+                            <div style="text-align: center;">
+                                <div class="score-board">Очки: <span id="clickerScore">0</span></div>
+                                <div class="sushi-clicker" id="sushiTarget">🍣</div>
+                            </div>
+                            <div class="shop-box">
+                                <h4 style="margin:0 0 8px 0; font-size:14px; color:#2d3748;">Магазин Апгрейдів</h4>
+                                <div style="margin-bottom: 12px; border-bottom: 1px dashed #cbd5e0; padding-bottom: 8px;">
+                                    <p style="font-size:12px; color:#4a5568; margin:0;" id="autoclickerCount">Автоклікери: 0 (+0/с)</p>
+                                    <button type="button" class="btn-shop" id="buyAutoclickerBtn" onclick="buyAutoclicker()">Автоклікер <br><span style="font-size:11px;" id="autoCostLabel">Ціна: 25</span></button>
+                                </div>
+                                <div>
+                                    <p style="font-size:12px; color:#4a5568; margin:0;" id="megaclickCount">Сила кліку: 1</p>
+                                    <button type="button" class="btn-shop" style="background:#3182ce;" id="buyMegaclickBtn" onclick="buyMegaclick()">Мега-Клік (+2) <br><span style="font-size:11px;" id="megaCostLabel">Ціна: 50</span></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="game-box" id="dinoBox">
+                        <div class="score-board-wrapper">
+                            <div class="score-board">🦖 Рахунок: <span id="dinoScore">0</span></div>
+                            <div class="score-board best">🏆 Рекорд: <span id="dinoBest">0</span></div>
+                        </div>
+                        <canvas id="dinoCanvas" width="450" height="200" tabindex="1"></canvas>
+                    </div>
+
+                </div>
+
+                <button type="button" class="btn-close-games" id="closeGamesBtn">Закінчити</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const mainPlayBtn = document.getElementById('mainPlayBtn');
+        const gameMenu = document.getElementById('gameMenu');
+        const closeGamesBtn = document.getElementById('closeGamesBtn');
+        const boxes = {
+            snake: document.getElementById('snakeBox'),
+            clicker: document.getElementById('clickerBox'),
+            dino: document.getElementById('dinoBox')
+        };
+
+        let snakeHighScore = 0;
+        let dinoHighScore = 0;
+        let activeGame = null;
+
+        mainPlayBtn.addEventListener('click', () => {
+            mainPlayBtn.style.display = 'none';
+            gameMenu.style.display = 'flex';
+            closeGamesBtn.style.display = 'inline-block';
+        });
+
+        closeGamesBtn.addEventListener('click', () => {
+            stopAllLoops();
+            gameMenu.style.display = 'none';
+            closeGamesBtn.style.display = 'none';
+            for (let key in boxes) boxes[key].style.display = 'none';
+            document.querySelectorAll('.btn-game-choice').forEach(b => b.classList.remove('active'));
+            mainPlayBtn.style.display = 'inline-block';
+        });
+
+        function switchGame(gameName) {
+            stopAllLoops();
+            document.querySelectorAll('.btn-game-choice').forEach(b => {
+                b.classList.remove('active');
+                if(b.textContent.toLowerCase().includes(gameName === 'dino' ? 'динозаврик' : gameName === 'snake' ? 'змійка' : 'клікер')) {
+                    b.classList.add('active');
+                }
+            });
+
+            for (let key in boxes) boxes[key].style.display = 'none';
+            boxes[gameName].style.display = 'flex';
+            activeGame = gameName;
+
+            if (gameName === 'snake') {
+                startSnake();
+                document.getElementById('snakeCanvas').focus();
+            }
+            if (gameName === 'clicker') {
+                startClicker();
+            }
+            if (gameName === 'dino') {
+                startDino();
+                document.getElementById('dinoCanvas').focus();
+            }
+        }
+
+        function stopAllLoops() {
+            activeGame = null;
+            if(window.snakeAnimationId) cancelAnimationFrame(window.snakeAnimationId);
+            if(window.dinoInterval) clearInterval(window.dinoInterval);
+            if(window.dinoScoreInterval) clearInterval(window.dinoScoreInterval);
+            if(window.autoClickerInterval) clearInterval(window.autoClickerInterval);
+        }
+
+        /* --- 1. ЛОГІКА ЗМІЙКИ (Лінія з градієнтом, сітка 15х15) --- */
+        const sCanvas = document.getElementById('snakeCanvas');
+        const sCtx = sCanvas.getContext('2d');
+        const sScoreDisp = document.getElementById('snakeScore');
+        const sBestDisp = document.getElementById('snakeBest');
+        const sBox = 20;
+
+        let snake, sFood, sDir, sNextDir, sScore;
+        let lastMoveTime, moveInterval = 210;
+
+        function startSnake() {
+            snake = [{x: 6*sBox, y: 7*sBox}, {x: 5*sBox, y: 7*sBox}, {x: 4*sBox, y: 7*sBox}];
+            sFood = {x: 10*sBox, y: 7*sBox};
+            sDir = "RIGHT";
+            sNextDir = "RIGHT";
+            sScore = 0;
+            sScoreDisp.textContent = sScore;
+            sBestDisp.textContent = snakeHighScore;
+            lastMoveTime = performance.now();
+
+            if(window.snakeAnimationId) cancelAnimationFrame(window.snakeAnimationId);
+            window.snakeAnimationId = requestAnimationFrame(gameLoopSnake);
+        }
+
+        window.addEventListener("keydown", (e) => {
+            if(activeGame !== 'snake') return;
+            if(["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(e.key.toLowerCase())) {
+                e.preventDefault();
+            }
+            if (e.key === "ArrowLeft" && sDir !== "RIGHT") sNextDir = "LEFT";
+            else if (e.key === "ArrowUp" && sDir !== "DOWN") sNextDir = "UP";
+            else if (e.key === "ArrowRight" && sDir !== "LEFT") sNextDir = "RIGHT";
+            else if (e.key === "ArrowDown" && sDir !== "UP") sNextDir = "DOWN";
+        });
+
+        function changeSnakeDir(dir) {
+            if (dir === "LEFT" && sDir !== "RIGHT") sNextDir = "LEFT";
+            else if (dir === "UP" && sDir !== "DOWN") sNextDir = "UP";
+            else if (dir === "RIGHT" && sDir !== "LEFT") sNextDir = "RIGHT";
+            else if (dir === "DOWN" && sDir !== "UP") sNextDir = "DOWN";
+        }
+
+        function gameLoopSnake(timestamp) {
+            if (activeGame !== 'snake') return;
+            window.snakeAnimationId = requestAnimationFrame(gameLoopSnake);
+
+            let elapsed = timestamp - lastMoveTime;
+            let progress = Math.min(elapsed / moveInterval, 1);
+
+            // Фон канвасу
+            sCtx.fillStyle = "#2e7d32";
+            sCtx.fillRect(0, 0, sCanvas.width, sCanvas.height);
+
+            // Сітка
+            sCtx.strokeStyle = "rgba(27, 94, 32, 0.4)";
+            sCtx.lineWidth = 1;
+            for (let x = 0; x < sCanvas.width; x += sBox) {
+                sCtx.beginPath(); sCtx.moveTo(x, 0); sCtx.lineTo(x, sCanvas.height); sCtx.stroke();
+            }
+            for (let y = 0; y < sCanvas.height; y += sBox) {
+                sCtx.beginPath(); sCtx.moveTo(0, y); sCtx.lineTo(sCanvas.width, y); sCtx.stroke();
+            }
+
+            // Малювання яблука
+            sCtx.font = "16px Arial";
+            sCtx.textAlign = "center";
+            sCtx.textBaseline = "middle";
+            sCtx.fillText("🍎", sFood.x + sBox/2, sFood.y + sBox/2 + 1);
+
+            // Розрахунок плавних координат для рендерингу лінії
+            let renderedPoints = [];
+            for (let i = 0; i < snake.length; i++) {
+                let current = snake[i];
+                let next = (i === 0) ? getNextHeadPos() : snake[i-1];
+
+                let renderX = current.x + (next.x - current.x) * progress + sBox/2;
+                let renderY = current.y + (next.y - current.y) * progress + sBox/2;
+                renderedPoints.push({x: renderX, y: renderY});
+            }
+
+            // МАЛЮВАННЯ СУЦІЛЬНОЇ ЛІНІЇ З ГРАДІЄНТОМ
+            sCtx.lineWidth = sBox - 2;
+            sCtx.lineJoin = "round";
+            sCtx.lineCap = "round";
+
+            for (let i = 0; i < renderedPoints.length - 1; i++) {
+                let pStart = renderedPoints[i];
+                let pEnd = renderedPoints[i+1];
+
+                // Створюємо локальний лінійний градієнт між сусідніми точками сегменту
+                let grad = sCtx.createLinearGradient(pStart.x, pStart.y, pEnd.x, pEnd.y);
+
+                // Коефіцієнт віддаленості від голови (0 - голова, 1 - хвіст)
+                let ratioStart = i / (renderedPoints.length - 1);
+                let ratioEnd = (i + 1) / (renderedPoints.length - 1);
+
+                // Інтерполяція кольору (від яскраво-синього до глибокого темного-синього)
+                let rStart = Math.floor(59 - ratioStart * 45);
+                let gStart = Math.floor(130 - ratioStart * 105);
+                let bStart = Math.floor(246 - ratioStart * 160);
+
+                let rEnd = Math.floor(59 - ratioEnd * 45);
+                let gEnd = Math.floor(130 - ratioEnd * 105);
+                let bEnd = Math.floor(246 - ratioEnd * 160);
+
+                grad.addColorStop(0, `rgb(${rStart}, ${gStart}, ${bStart})`);
+                grad.addColorStop(1, `rgb(${rEnd}, ${gEnd}, ${bEnd})`);
+
+                sCtx.strokeStyle = grad;
+                sCtx.beginPath();
+                sCtx.moveTo(pStart.x, pStart.y);
+                sCtx.lineTo(pEnd.x, pEnd.y);
+                sCtx.stroke();
+            }
+
+            // Окремо малюємо виразну Голову
+            if (renderedPoints.length > 0) {
+                sCtx.fillStyle = "#3b82f6";
+                sCtx.beginPath();
+                sCtx.arc(renderedPoints[0].x, renderedPoints[0].y, sBox/2, 0, Math.PI * 2);
+                sCtx.fill();
+            }
+
+            // Оновлення позицій за таймером кроку
+            if (elapsed >= moveInterval) {
+                sDir = sNextDir;
+                let head = getNextHeadPos();
+
+                if (head.x < 0 || head.x >= sCanvas.width || head.y < 0 || head.y >= sCanvas.height || snake.some(s => s.x === head.x && s.y === head.y)) {
+                    cancelAnimationFrame(window.snakeAnimationId);
+                    sCtx.fillStyle = "rgba(0,0,0,0.65)"; sCtx.fillRect(0,0,sCanvas.width,sCanvas.height);
+                    sCtx.fillStyle = "#fff"; sCtx.font = "bold 16px Segoe UI"; sCtx.textAlign = "center"; sCtx.textBaseline = "middle";
+                    sCtx.fillText("Гейм Овер! Перезапуск...", sCanvas.width/2, sCanvas.height/2);
+                    setTimeout(startSnake, 1600);
+                    return;
+                }
+
+                snake.unshift(head);
+
+                if (head.x === sFood.x && head.y === sFood.y) {
+                    sScore++;
+                    sScoreDisp.textContent = sScore;
+                    if(sScore > snakeHighScore) {
+                        snakeHighScore = sScore;
+                        sBestDisp.textContent = snakeHighScore;
+                    }
+                    sFood = {
+                        x: Math.floor(Math.random() * (sCanvas.width / sBox)) * sBox,
+                        y: Math.floor(Math.random() * (sCanvas.height / sBox)) * sBox
+                    };
+                } else {
+                    snake.pop();
+                }
+
+                lastMoveTime = timestamp;
+            }
+        }
+
+        function getNextHeadPos() {
+            let nX = snake[0].x;
+            let nY = snake[0].y;
+            if (sNextDir === "LEFT") nX -= sBox;
+            if (sNextDir === "UP") nY -= sBox;
+            if (sNextDir === "RIGHT") nX += sBox;
+            if (sNextDir === "DOWN") nY += sBox;
+            return {x: nX, y: nY};
+        }
+
+        /* --- 2. ЛОГІКА КЛІКЕРА --- */
+        const clickerScoreDisp = document.getElementById('clickerScore');
+        const sushiTarget = document.getElementById('sushiTarget');
+        const buyAutoclickerBtn = document.getElementById('buyAutoclickerBtn');
+        const buyMegaclickBtn = document.getElementById('buyMegaclickBtn');
+        const autoclickerCountDisp = document.getElementById('autoclickerCount');
+        const megaclickCountDisp = document.getElementById('megaclickCount');
+
+        let cScore = 0, autoClickers = 0, clickPower = 1, autoCost = 25, megaCost = 50;
+
+        function startClicker() {
+            cScore = 0; autoClickers = 0; clickPower = 1; autoCost = 25; megaCost = 50;
+            clickerScoreDisp.textContent = cScore;
+            autoclickerCountDisp.textContent = "Автоклікери: 0 (+0/с)";
+            megaclickCountDisp.textContent = "Сила кліку: 1";
+            document.getElementById('autoCostLabel').textContent = "Ціна: " + autoCost;
+            document.getElementById('megaCostLabel').textContent = "Ціна: " + megaCost;
+            updateShopButtons();
+
+            if(window.autoClickerInterval) clearInterval(window.autoClickerInterval);
+            window.autoClickerInterval = setInterval(() => {
+                if(autoClickers > 0) {
+                    cScore += autoClickers;
+                    clickerScoreDisp.textContent = cScore;
+                    updateShopButtons();
+                }
+            }, 1000);
+        }
+
+        sushiTarget.onclick = function(e) {
+            cScore += clickPower;
+            clickerScoreDisp.textContent = cScore;
+            updateShopButtons();
+
+            let f = document.createElement('div');
+            f.className = 'floating-text'; f.textContent = '+' + clickPower;
+            f.style.left = `${e.clientX}px`; f.style.top = `${e.clientY}px`;
+            document.body.appendChild(f);
+            setTimeout(() => f.remove(), 600);
+        };
+
+        function buyAutoclicker() {
+            if (cScore >= autoCost) {
+                cScore -= autoCost; autoClickers++; autoCost = Math.floor(autoCost * 1.4);
+                clickerScoreDisp.textContent = cScore;
+                autoclickerCountDisp.textContent = `Автоклікери: ${autoClickers} (+${autoClickers}/с)`;
+                document.getElementById('autoCostLabel').textContent = "Ціна: " + autoCost;
+                updateShopButtons();
+            }
+        }
+
+        function buyMegaclick() {
+            if (cScore >= megaCost) {
+                cScore -= megaCost; clickPower += 2; megaCost = Math.floor(megaCost * 1.5);
+                clickerScoreDisp.textContent = cScore;
+                megaclickCountDisp.textContent = "Сила кліку: " + clickPower;
+                document.getElementById('megaCostLabel').textContent = "Ціна: " + megaCost;
+                updateShopButtons();
+            }
+        }
+
+        function updateShopButtons() {
+            buyAutoclickerBtn.disabled = cScore < autoCost;
+            buyMegaclickBtn.disabled = cScore < megaCost;
+        }
+
+        /* --- 3. ЛОГІКА ДИНОЗАВРИКА --- */
+        const dCanvas = document.getElementById('dinoCanvas');
+        const dCtx = dCanvas.getContext('2d');
+        const dScoreDisp = document.getElementById('dinoScore');
+        const dBestDisp = document.getElementById('dinoBest');
+
+        let dino, obstacles, dScore, isJumping, gravity, gameSpeed;
+
+        function startDino() {
+            dino = { x: 50, y: 140, w: 24, h: 40, vy: 0 };
+            obstacles = [{ x: 500, type: 'cactus', w: 16, h: 36, y: 144 }];
+            dScore = 0;
+            isJumping = false;
+            gravity = 1.2;
+            gameSpeed = 6.5;
+            dScoreDisp.textContent = dScore;
+            dBestDisp.textContent = dinoHighScore;
+
+            if(window.dinoInterval) clearInterval(window.dinoInterval);
+            window.dinoInterval = setInterval(updateDino, 20);
+
+            if(window.dinoScoreInterval) clearInterval(window.dinoScoreInterval);
+            window.dinoScoreInterval = setInterval(() => {
+                if (activeGame === 'dino') {
+                    dScore += 10;
+                    dScoreDisp.textContent = dScore;
+                    if(dScore > dinoHighScore) {
+                        dinoHighScore = dScore;
+                        dBestDisp.textContent = dinoHighScore;
+                    }
+                }
+            }, 1500);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if(activeGame !== 'dino') return;
+            if(["keyw", "arrowup", " "].includes(e.code.toLowerCase())) {
+                e.preventDefault();
+            }
+            if (e.key.toLowerCase() === ' ' || e.key.toLowerCase() === 'w' || e.key === 'ArrowUp') {
+                if (!isJumping) {
+                    dino.vy = -15;
+                    isJumping = true;
+                }
+            }
+        });
+
+        function updateDino() {
+            if (isJumping) {
+                dino.vy += gravity;
+                dino.y += dino.vy;
+                if (dino.y >= 140) {
+                    dino.y = 140; dino.vy = 0; isJumping = false;
+                }
+            }
+
+            obstacles.forEach(obs => obs.x -= gameSpeed);
+
+            if (obstacles[0] && obstacles[0].x < -40) {
+                obstacles.shift();
+                let randType = Math.random() > 0.5 ? 'cactus' : 'bird';
+                if(randType === 'cactus') {
+                    obstacles.push({ x: 480 + Math.random() * 140, type: 'cactus', w: 18, h: 36, y: 144 });
+                } else {
+                    obstacles.push({ x: 480 + Math.random() * 140, type: 'bird', w: 24, h: 20, y: 110 });
+                }
+                if(dScore > 0 && dScore % 30 === 0) gameSpeed += 0.5;
+            }
+
+            dCtx.clearRect(0, 0, dCanvas.width, dCanvas.height);
+            dCtx.fillStyle = "#ffffff";
+            dCtx.fillRect(0, 0, dCanvas.width, dCanvas.height);
+
+            // Сонце
+            dCtx.fillStyle = "rgba(250, 204, 21, 0.25)";
+            dCtx.beginPath(); dCtx.arc(380, 45, 28, 0, Math.PI * 2); dCtx.fill();
+            dCtx.fillStyle = "#facc15";
+            dCtx.beginPath(); dCtx.arc(380, 45, 18, 0, Math.PI * 2); dCtx.fill();
+            dCtx.strokeStyle = "#ca8a04"; dCtx.lineWidth = 2;
+            dCtx.beginPath(); dCtx.arc(380, 45, 18, 0, Math.PI * 2); dCtx.stroke();
+
+            // Лінія землі
+            dCtx.strokeStyle = "#4a5568"; dCtx.lineWidth = 2;
+            dCtx.beginPath(); dCtx.moveTo(0, 180); dCtx.lineTo(dCanvas.width, 180); dCtx.stroke();
+
+            // Динозавр
+            dCtx.save();
+            dCtx.font = "28px Arial";
+            dCtx.textAlign = "left";
+            dCtx.textBaseline = "alphabetic";
+            dCtx.translate(dino.x + 24, dino.y + 38);
+            dCtx.scale(-1, 1);
+            dCtx.fillText("🦖", 0, 0);
+            dCtx.restore();
+
+            // Перешкоди
+            obstacles.forEach(obs => {
+                dCtx.font = "24px Arial";
+                dCtx.textAlign = "left";
+                dCtx.textBaseline = "alphabetic";
+                if(obs.type === 'cactus') {
+                    dCtx.fillStyle = "#2d3748";
+                    dCtx.fillText("🌵", obs.x, obs.y + 32);
+                } else {
+                    dCtx.fillText("🦅", obs.x, obs.y + 22);
+                }
+
+                let dLeft = dino.x + 4;
+                let dRight = dino.x + dino.w - 4;
+                let dTop = dino.y;
+                let dBottom = dino.y + dino.h;
+
+                let oLeft = obs.x;
+                let oRight = obs.x + obs.w;
+                let oTop = obs.y;
+                let oBottom = obs.y + obs.h;
+
+                if (obs.type === 'bird' && !isJumping) {
+                    oBottom = 180;
+                }
+
+                if (dRight > oLeft && dLeft < oRight && dBottom > oTop && dTop < oBottom) {
+                    clearInterval(window.dinoInterval);
+                    clearInterval(window.dinoScoreInterval);
+                    dCtx.fillStyle = "rgba(0,0,0,0.8)"; dCtx.fillRect(0,0,dCanvas.width,dCanvas.height);
+                    dCtx.fillStyle = "#fff"; dCtx.font = "bold 18px Segoe UI"; dCtx.textAlign = "center"; dCtx.textBaseline = "middle";
+                    dCtx.fillText("ГРА ЗАКІНЧЕНА!", dCanvas.width/2, dCanvas.height/2);
+                    setTimeout(startDino, 1500);
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>
